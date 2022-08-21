@@ -15,6 +15,8 @@ class Player extends AcGameObject{
         this.move_length = 0;
         
         this.eps = 0.1;
+
+        this.cur_skill = null; //当前选择的技能
     }
 
     start(){
@@ -45,8 +47,26 @@ class Player extends AcGameObject{
         });
         
         this.playground.game_map.$canvas.mousedown(function(e){
-            if(e.which == 3) {
+            if(e.which === 3) {
                 outer.move_to(e.clientX, e.clientY);
+            }else if(e.which === 1) { //按下左键释放当前选择的技能
+                if(outer.cur_skill === "fireball") outer.shoot_fireball(e.clientX, e.clientY);
+                outer.cur_skill = null;
+            }
+        });
+
+        //按下S键，取消移动
+        $(window).keydown(function(e){
+            if(e.which == 83) { //S
+                outer.move_length = 0;
+            }
+        });
+
+        //键盘按下按键，选择技能
+        $(window).keyup(function(e){
+            if(e.which == 81) { //按下Q键选择火球技能
+                outer.cur_skill = "fireball";
+                return false;
             }
         });
 
@@ -62,6 +82,14 @@ class Player extends AcGameObject{
         this.vx = Math.cos(this.angle);
         this.vy = Math.sin(this.angle);
 
+    }
+    
+    shoot_fireball(tx, ty){
+        let angle = Math.atan2(ty - this.y, tx - this.x);
+        let vx = Math.cos(angle);
+        let vy = Math.sin(angle);
+        console.log("shoot fireball", tx, ty, vx, vy);
+        let fireball = new FireBall(this.playground, this, this.x, this.y, this.playground.height * 0.01, vx, vy ,"red", this.playground.height * 0.5, this.playground.height * 0.5);
     }
 
     render(){

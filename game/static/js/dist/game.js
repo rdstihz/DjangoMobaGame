@@ -76,7 +76,7 @@ class AcGameObject{
         this.on_destory();
         for(let i = 0; i < AC_GAME_OBJECTS.length; i++) {
             if(AC_GAME_OBJECTS[i] === this) {
-                AC_GAME_OBJECTS.splics(i, 1);
+                AC_GAME_OBJECTS.splice(i, 1);
                 break;
             }
         }
@@ -145,6 +145,8 @@ class Player extends AcGameObject{
         this.move_length = 0;
         
         this.eps = 0.1;
+
+        this.cur_skill = null; //当前选择的技能
     }
 
     start(){
@@ -175,8 +177,26 @@ class Player extends AcGameObject{
         });
         
         this.playground.game_map.$canvas.mousedown(function(e){
-            if(e.which == 3) {
+            if(e.which === 3) {
                 outer.move_to(e.clientX, e.clientY);
+            }else if(e.which === 1) { //按下左键释放当前选择的技能
+                if(outer.cur_skill === "fireball") outer.shoot_fireball(e.clientX, e.clientY);
+                outer.cur_skill = null;
+            }
+        });
+
+        //按下S键，取消移动
+        $(window).keydown(function(e){
+            if(e.which == 83) { //S
+                outer.move_length = 0;
+            }
+        });
+
+        //键盘按下按键，选择技能
+        $(window).keyup(function(e){
+            if(e.which == 81) { //按下Q键选择火球技能
+                outer.cur_skill = "fireball";
+                return false;
             }
         });
 
@@ -193,6 +213,14 @@ class Player extends AcGameObject{
         this.vy = Math.sin(this.angle);
 
     }
+    
+    shoot_fireball(tx, ty){
+        let angle = Math.atan2(ty - this.y, tx - this.x);
+        let vx = Math.cos(angle);
+        let vy = Math.sin(angle);
+        console.log("shoot fireball", tx, ty, vx, vy);
+        let fireball = new FireBall(this.playground, this, this.x, this.y, this.playground.height * 0.01, vx, vy ,"red", this.playground.height * 0.5, this.playground.height * 0.5);
+    }
 
     render(){
         this.ctx.beginPath();
@@ -201,6 +229,47 @@ class Player extends AcGameObject{
         this.ctx.fill();
     }
 }
+class FireBall extends AcGameObject{
+    constructor(playground, player, x, y, radius, vx, vy, color, speed, move_length){
+        super();
+        this.playground = playground;
+        this.ctx = this.playground.game_map.ctx;
+        this.player = player;
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.vx = vx;
+        this.vy =vy;
+        this.color = color;
+        this.speed = speed;
+        this.move_length = move_length;
+        
+        this.eps = 0.1;
+    }
+
+    start(){}
+    update(){
+        if(this.move_length < this.eps) {
+            this.move_length = 0;
+            this.destory();
+        }else{
+            let moved = Math.min(this.move_length, this.speed * this.timedelta / 1000);
+            this.x += this.vx * moved;
+            this.y += this.vy * moved;
+            this.move_length -= moved;
+        }
+
+        this.render();
+    }
+    render(){
+        this.ctx.beginPath();
+        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        this.ctx.fillStyle = this.color;
+        this.ctx.fill();
+    }
+
+}
+
 class AcGamePlayground{
     constructor(root) {
         this.root = root;
