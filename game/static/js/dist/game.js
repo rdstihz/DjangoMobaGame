@@ -129,6 +129,50 @@ class GameMap extends AcGameObject {
     }
 
 }
+class Particle extends AcGameObject{
+    constructor(playground, x, y, radius, vx, vy, color, speed, move_length) {
+        super();
+        this.playground = playground;
+        this.ctx = this.playground.game_map.ctx;
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.speed = speed;
+        this.move_length = move_length;
+        
+        this.friction = 0.9;
+        this.eps = 1;
+    }
+    start(){}
+
+    update(){
+        if(this.move_length < this.eps || this.speed < this.eps) {
+            this.destory();
+            return false;
+        }
+        
+        let moved = Math.min(this.move_length, this.speed * this.timedelta / 1000);
+        this.x += moved * this.vx;
+        this.y += moved * this.vy;
+
+        this.speed *= this.friction;
+        this.move_length -= moved;
+
+        this.render();
+    }
+    
+    render() {
+        this.ctx.beginPath();
+        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        this.ctx.fillStyle = this.color;
+        this.ctx.fill();
+
+    }
+
+}
 class Player extends AcGameObject{
     constructor(playground, x, y, radius, color, speed, is_me){
         super();
@@ -258,6 +302,18 @@ class Player extends AcGameObject{
 
     be_attacked(angle, damage) {//被火球击中
         //粒子效果
+        let particle_num = 20 + 10 * Math.random();
+        for(let i = 0; i < particle_num; i++) {
+            let x = this.x, y = this.y;
+            let radius = this.radius * Math.random() * 0.1;
+            let angle = Math.PI * 2 * Math.random();
+            let vx = Math.cos(angle);
+            let vy = Math.sin(angle);
+            let color = this.color;
+            let speed = this.speed * 10;
+            let move_length = this.radius * Math.random() * 5;
+            new Particle(this.playground, x, y, radius, vx, vy, color, speed, move_length);
+        }
 
         this.radius -= damage;
         if(this.radius < this.eps / 10 * this.playground.height) {
@@ -361,11 +417,13 @@ class AcGamePlayground{
         this.width = this.$playground.width();
         this.height = this.$playground.height();
         this.game_map = new GameMap(this);
+
+        this.colors = ["blue", "green", "grey", "pink", "yellow"];
         this.players = [];
         this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "white", this.height * 0.15, true));
 
         for(let i = 0; i < 5; i++) { //添加其它玩家
-            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "blue", this.height * 0.15, false));
+            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, this.get_random_color(), this.height * 0.15, false));
 
         }
 
@@ -386,6 +444,11 @@ class AcGamePlayground{
     hide() {
         this.$playground.hide();
     }
+
+    get_random_color() {
+        return this.colors[Math.floor(Math.random() * this.colors.length)];
+    }
+
 
 }
 export class AcGame {
