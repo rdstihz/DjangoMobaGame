@@ -11,11 +11,12 @@ class GameMap extends AcGameObject {
 
         this.playground.$playground.append(this.$canvas);
 
-
+        this.timestamp = 0;//时间戳
     }
     start() {
     }
     update(){
+        this.timestamp += this.timedelta / 1000;
         this.render();
     }
 

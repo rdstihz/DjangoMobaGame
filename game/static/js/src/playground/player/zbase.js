@@ -13,7 +13,7 @@ class Player extends AcGameObject{
         this.vx = 0;
         this.vy = 0;
         this.move_length = 0;
-        
+
         this.eps = 0.1;
 
         this.cur_skill = null; //当前选择的技能
@@ -28,12 +28,27 @@ class Player extends AcGameObject{
         if(this.move_length < this.eps) {
             this.move_length = 0;
 
+            //AI玩家，随机移动, 随机发射火球
+            if(!this.is_me) {
+                let x = Math.random() * this.playground.width;
+                let y = Math.random() * this.playground.height;
+                this.move_to(x, y);
+
+
+            }
+
         }else {
             let moved = Math.min(this.move_length, this.speed * this.timedelta / 1000);
             this.x += moved * this.vx;
             this.y += moved * this.vy;
 
             this.move_length -= moved;
+        }
+        if(this.playground.game_map.timestamp > 4 && !this.is_me && Math.random() < 1.0 / 300) { //平均5s发射一次, 前4s不发射
+            let target = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
+            let tx = target.x;
+            let ty = target.y;
+            this.shoot_fireball(tx, ty);
         }
 
         this.render();
@@ -43,9 +58,9 @@ class Player extends AcGameObject{
     add_listening_events(){
         let outer = this;
         this.playground.game_map.$canvas.on("contextmenu", function(){//阻止右键菜单
-           return false; 
+            return false; 
         });
-        
+
         this.playground.game_map.$canvas.mousedown(function(e){
             if(e.which === 3) {
                 outer.move_to(e.clientX, e.clientY);
@@ -83,7 +98,7 @@ class Player extends AcGameObject{
         this.vy = Math.sin(this.angle);
 
     }
-    
+
     shoot_fireball(tx, ty){
         let angle = Math.atan2(ty - this.y, tx - this.x);
         let vx = Math.cos(angle);
