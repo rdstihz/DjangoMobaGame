@@ -23,6 +23,14 @@ class Player extends AcGameObject{
         this.eps = 0.1;
 
         this.cur_skill = null; //当前选择的技能
+
+        if(this.is_me) {
+            this.username = this.playground.root.settings.username;
+            this.photo = this.playground.root.settings.photo;
+            this.img = new Image();
+            this.img.src = this.photo;
+        }
+
     }
 
     start(){
@@ -122,10 +130,21 @@ class Player extends AcGameObject{
     }
 
     render(){
-        this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-        this.ctx.fillStyle = this.color;
-        this.ctx.fill();
+        if(this.is_me) {
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.stroke();
+            this.ctx.clip();
+            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, 
+                               this.radius * 2, this.radius * 2);
+            this.ctx.restore();
+        }else {
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.fillStyle = this.color;
+            this.ctx.fill();
+        }
     }
 
     be_attacked(angle, damage) {//被火球击中
