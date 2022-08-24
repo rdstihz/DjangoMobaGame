@@ -95,6 +95,8 @@ class Settings {
 
         this.$login.hide();
         this.$register.hide();
+        
+        this.$acwing_login = this.$login.find(".ac-game-settings-acwing > img")
 
         this.root.$ac_game.append(this.$settings);
 
@@ -107,8 +109,26 @@ class Settings {
     }
 
     add_listening_events(){
+        let outer = this;
         this.add_listening_events_login();
         this.add_listening_events_register();
+
+        //Acwing一键登录
+        this.$acwing_login.click(function(){
+            outer.acwing_login();
+        })
+    }
+    
+    acwing_login(){
+        $.ajax({
+            url: "https://app3152.acapp.acwing.com.cn/settings/acwing/web/apply_code/",
+            type: "GET",
+            success: function(resp){
+                if(resp.result === "success") {
+                    window.location.replace(resp.apply_code_url)
+                }
+            }
+        })
     }
 
     add_listening_events_login() {
@@ -221,6 +241,9 @@ class Settings {
     }
 
     logout_remote(){
+        if (this.platform === "ACAPP") {
+            return false;
+        }
         let outer = this;
         $.ajax({
             url: "https://app3152.acapp.acwing.com.cn/settings/logout/",
