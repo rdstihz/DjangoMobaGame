@@ -202,6 +202,10 @@ class Player extends AcGameObject{
         this.eps = 0.1;
 
         this.cur_skill = null; //当前选择的技能
+        
+        //鼠标位置
+        this.clientX = 0;
+        this.clientY = 0;
 
         if(this.is_me) {
             this.username = this.playground.root.settings.username;
@@ -219,7 +223,6 @@ class Player extends AcGameObject{
     }
     update(){
         if(this.damage_speed > 10) {
-            console.log("击退");
             this.vx = this.vy = 0;
             this.move_length = 0;
             this.x += this.damage_x * this.damage_speed * this.timedelta / 1000;
@@ -262,14 +265,15 @@ class Player extends AcGameObject{
 
         this.playground.game_map.$canvas.mousedown(function(e){
             const rect = outer.ctx.canvas.getBoundingClientRect();
-            let rx = e.clientX - rect.left;
-            let ry = e.clientY - rect.top;
+            let rx = outer.clientX - rect.left;
+            let ry = outer.clientY - rect.top;
             if(e.which === 3) {
                 outer.move_to(rx, ry);
-            }else if(e.which === 1) { //按下左键释放当前选择的技能
-                if(outer.cur_skill === "fireball") outer.shoot_fireball(rx, ry);
-                outer.cur_skill = null;
             }
+            //else if(e.which === 1) { //按下左键释放当前选择的技能
+            //    if(outer.cur_skill === "fireball") outer.shoot_fireball(rx, ry);
+            //    outer.cur_skill = null;
+            //}
         });
 
         //按下S键，取消移动
@@ -281,11 +285,22 @@ class Player extends AcGameObject{
 
         //键盘按下按键，选择技能
         $(window).keyup(function(e){
+            const rect = outer.ctx.canvas.getBoundingClientRect();
+            let rx = outer.clientX - rect.left;
+            let ry = outer.clientY - rect.top;
             if(e.which == 81) { //按下Q键选择火球技能
-                outer.cur_skill = "fireball";
+                //outer.cur_skill = "fireball";
+                outer.shoot_fireball(rx, ry);
                 return false;
             }
         });
+
+        //鼠标移动，随时记录鼠标位置
+        $(window).mousemove(function(e){
+            outer.clientX = e.clientX;
+            outer.clientY = e.clientY;
+        });
+
 
     }
     get_dist(x1, y1, x2, y2){
@@ -482,7 +497,7 @@ class Settings {
         this.root = root;
         this.platform = "WEB";
         if (this.root.AcWingOS) this.platform = "ACAPP";
-        
+
         this.username = "";
         this.photo = "";
 
@@ -505,24 +520,30 @@ class Settings {
                             <button>登录</button>
                         </div>
                     </div>
-                    
+
                     <div class="ac-game-settings-error-messages">
                     </div>
 
                     <div class="ac-game-settings-option">
                         注册
                     </div>
-                    <br>
-                    <div class="ac-game-settings-acwing">
+                    <div class="ac-game-settings-third-login ac-game-settings-third-login-acwing">
                         <img width="30" src="https://app3152.acapp.acwing.com.cn/static/images/settings/acwing_logo.png">
                         <br>
                         <div>
                             AcWing一键登录
                         </div>
                     </div>
+                    <div class="ac-game-settings-third-login ac-game-settings-third-login-github">
+                        <img width="30" src="https://app3152.acapp.acwing.com.cn/static/images/settings/github_logo3.png">
+                        <br>
+                        <div>
+                            Github一键登录
+                        </div>
+                    </div>
                 </div>
 
-                    
+
                 <div class="ac-game-settings-register">
                     <div class="ac-game-settings-title">注册</div>
                     <div class="ac-game-settings-username">
@@ -545,9 +566,9 @@ class Settings {
                             <button>注册</button>
                         </div>
                     </div>
-            
+
                     <div class="ac-game-settings-error-messages">
-            
+
                     </div>
                     <div class="ac-game-settings-option">
                         登录
@@ -558,7 +579,7 @@ class Settings {
 
         this.$login = this.$settings.find(".ac-game-settings-login");
         this.$register = this.$settings.find(".ac-game-settings-register");
-        
+
         this.$login_username = this.$login.find(".ac-game-settings-username input");
         this.$login_password = this.$login.find(".ac-game-settings-password input");
         this.$login_submit =   this.$login.find(".ac-game-settings-submit button");
@@ -574,17 +595,22 @@ class Settings {
 
         this.$login.hide();
         this.$register.hide();
-        
-        this.$acwing_login = this.$login.find(".ac-game-settings-acwing > img")
+
+        this.$acwing_login = this.$login.find(".ac-game-settings-third-login-acwing > img");
+        this.$github_login = this.$login.find(".ac-game-settings-third-login-github > img");
 
         this.root.$ac_game.append(this.$settings);
-
         this.start();
     }
-    
+
     start(){
-        this.getinfo();
-        this.add_listening_events();
+        if(this.platform === "WEB") {
+            this.getinfo();
+            this.add_listening_events();
+        }else {
+            //ACAPP端一键登录
+            this.acapp_login();
+        }
     }
 
     add_listening_events(){
@@ -595,9 +621,13 @@ class Settings {
         //Acwing一键登录
         this.$acwing_login.click(function(){
             outer.acwing_login();
-        })
+        });
+        //Github一键登录
+        this.$github_login.click(function(){
+            outer.github_login();
+        });
     }
-    
+
     acwing_login(){
         $.ajax({
             url: "https://app3152.acapp.acwing.com.cn/settings/acwing/web/apply_code/",
@@ -607,7 +637,19 @@ class Settings {
                     window.location.replace(resp.apply_code_url)
                 }
             }
-        })
+        });
+    }
+
+    github_login(){
+        $.ajax({
+            url: "https://app3152.acapp.acwing.com.cn/settings/github/apply_code/",
+            type: "GET",
+            success: function(resp){
+                if(resp.result === "success") {
+                    window.location.replace(resp.apply_code_url)
+                }
+            }
+        });
     }
 
     add_listening_events_login() {
@@ -658,8 +700,33 @@ class Settings {
             }
         })
     }
+
+    acapp_login() {
+        let outer = this;
+        $.ajax({
+            //获取参数
+            url: "https://app3152.acapp.acwing.com.cn/settings/acwing/acapp/apply_code/",
+            type: "GET",
+            success: function(resp) {
+                console.log(resp);
+                if(resp.result === "success") {
+                    outer.root.AcWingOS.api.oauth2.authorize(resp.appid, resp.redirect_uri, resp.scope, resp.state, function(resp){
+                        console.log(resp);
+                        if(resp.result === "success") {
+                            outer.username = resp.username;
+                            outer.photo = resp.photo;
+                            outer.hide();
+                            outer.root.menu.show();
+                        }
+                    });
+                }
+
+            }
+        });
+    }
+
     register(){
-         // 打开注册页面
+        // 打开注册页面
         this.$login.hide();
         this.$register.show();
     }
@@ -668,7 +735,7 @@ class Settings {
         this.$register.hide();
         this.$login.show();
     }
-    
+
     login_remote(){
         let outer = this;
         let username = this.$login_username.val();
@@ -748,7 +815,7 @@ export class AcGame {
         this.id = id;
         this.$ac_game = $('#'+id);
         this.AcWingOS = AcWingOS;
-        
+        console.log(AcWingOS);
         this.settings = new Settings(this);
         this.menu = new AcGameMenu(this);
         this.playground = new AcGamePlayground(this);

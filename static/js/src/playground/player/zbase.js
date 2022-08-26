@@ -23,6 +23,10 @@ class Player extends AcGameObject{
         this.eps = 0.1;
 
         this.cur_skill = null; //当前选择的技能
+        
+        //鼠标位置
+        this.clientX = 0;
+        this.clientY = 0;
 
         if(this.is_me) {
             this.username = this.playground.root.settings.username;
@@ -40,7 +44,6 @@ class Player extends AcGameObject{
     }
     update(){
         if(this.damage_speed > 10) {
-            console.log("击退");
             this.vx = this.vy = 0;
             this.move_length = 0;
             this.x += this.damage_x * this.damage_speed * this.timedelta / 1000;
@@ -83,14 +86,15 @@ class Player extends AcGameObject{
 
         this.playground.game_map.$canvas.mousedown(function(e){
             const rect = outer.ctx.canvas.getBoundingClientRect();
-            let rx = e.clientX - rect.left;
-            let ry = e.clientY - rect.top;
+            let rx = outer.clientX - rect.left;
+            let ry = outer.clientY - rect.top;
             if(e.which === 3) {
                 outer.move_to(rx, ry);
-            }else if(e.which === 1) { //按下左键释放当前选择的技能
-                if(outer.cur_skill === "fireball") outer.shoot_fireball(rx, ry);
-                outer.cur_skill = null;
             }
+            //else if(e.which === 1) { //按下左键释放当前选择的技能
+            //    if(outer.cur_skill === "fireball") outer.shoot_fireball(rx, ry);
+            //    outer.cur_skill = null;
+            //}
         });
 
         //按下S键，取消移动
@@ -102,11 +106,22 @@ class Player extends AcGameObject{
 
         //键盘按下按键，选择技能
         $(window).keyup(function(e){
+            const rect = outer.ctx.canvas.getBoundingClientRect();
+            let rx = outer.clientX - rect.left;
+            let ry = outer.clientY - rect.top;
             if(e.which == 81) { //按下Q键选择火球技能
-                outer.cur_skill = "fireball";
+                //outer.cur_skill = "fireball";
+                outer.shoot_fireball(rx, ry);
                 return false;
             }
         });
+
+        //鼠标移动，随时记录鼠标位置
+        $(window).mousemove(function(e){
+            outer.clientX = e.clientX;
+            outer.clientY = e.clientY;
+        });
+
 
     }
     get_dist(x1, y1, x2, y2){

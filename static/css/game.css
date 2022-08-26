@@ -79,9 +79,14 @@
     height: 7vh;
 }
 
-.ac-game-settings-acwing{
-    display: block;
+.ac-game-settings-third-login{
+    display: inline-block;
     height: 7vh;
+    position: relative;
+    top: 5vh;
+    left: 34%;
+    transform: translate(-50%, -50%);
+    padding-left: 0px;
 }
 
 .ac-game-settings-item{
@@ -129,7 +134,7 @@
     cursor: pointer;
 }
 
-.ac-game-settings-acwing > img{
+.ac-game-settings-third-login > img{
     position: relative;
     top: 50%;
     left: 50%;
@@ -139,7 +144,7 @@
     display: block;
 }
 
-.ac-game-settings-acwing > div{
+.ac-game-settings-third-login > div{
     color: white;
     font-size: 1.5vh;
     text-align: center;

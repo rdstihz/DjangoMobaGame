@@ -3,7 +3,7 @@ class Settings {
         this.root = root;
         this.platform = "WEB";
         if (this.root.AcWingOS) this.platform = "ACAPP";
-        
+
         this.username = "";
         this.photo = "";
 
@@ -26,24 +26,30 @@ class Settings {
                             <button>登录</button>
                         </div>
                     </div>
-                    
+
                     <div class="ac-game-settings-error-messages">
                     </div>
 
                     <div class="ac-game-settings-option">
                         注册
                     </div>
-                    <br>
-                    <div class="ac-game-settings-acwing">
+                    <div class="ac-game-settings-third-login ac-game-settings-third-login-acwing">
                         <img width="30" src="https://app3152.acapp.acwing.com.cn/static/images/settings/acwing_logo.png">
                         <br>
                         <div>
                             AcWing一键登录
                         </div>
                     </div>
+                    <div class="ac-game-settings-third-login ac-game-settings-third-login-github">
+                        <img width="30" src="https://app3152.acapp.acwing.com.cn/static/images/settings/github_logo3.png">
+                        <br>
+                        <div>
+                            Github一键登录
+                        </div>
+                    </div>
                 </div>
 
-                    
+
                 <div class="ac-game-settings-register">
                     <div class="ac-game-settings-title">注册</div>
                     <div class="ac-game-settings-username">
@@ -66,9 +72,9 @@ class Settings {
                             <button>注册</button>
                         </div>
                     </div>
-            
+
                     <div class="ac-game-settings-error-messages">
-            
+
                     </div>
                     <div class="ac-game-settings-option">
                         登录
@@ -79,7 +85,7 @@ class Settings {
 
         this.$login = this.$settings.find(".ac-game-settings-login");
         this.$register = this.$settings.find(".ac-game-settings-register");
-        
+
         this.$login_username = this.$login.find(".ac-game-settings-username input");
         this.$login_password = this.$login.find(".ac-game-settings-password input");
         this.$login_submit =   this.$login.find(".ac-game-settings-submit button");
@@ -95,17 +101,22 @@ class Settings {
 
         this.$login.hide();
         this.$register.hide();
-        
-        this.$acwing_login = this.$login.find(".ac-game-settings-acwing > img")
+
+        this.$acwing_login = this.$login.find(".ac-game-settings-third-login-acwing > img");
+        this.$github_login = this.$login.find(".ac-game-settings-third-login-github > img");
 
         this.root.$ac_game.append(this.$settings);
-
         this.start();
     }
-    
+
     start(){
-        this.getinfo();
-        this.add_listening_events();
+        if(this.platform === "WEB") {
+            this.getinfo();
+            this.add_listening_events();
+        }else {
+            //ACAPP端一键登录
+            this.acapp_login();
+        }
     }
 
     add_listening_events(){
@@ -116,9 +127,13 @@ class Settings {
         //Acwing一键登录
         this.$acwing_login.click(function(){
             outer.acwing_login();
-        })
+        });
+        //Github一键登录
+        this.$github_login.click(function(){
+            outer.github_login();
+        });
     }
-    
+
     acwing_login(){
         $.ajax({
             url: "https://app3152.acapp.acwing.com.cn/settings/acwing/web/apply_code/",
@@ -128,7 +143,19 @@ class Settings {
                     window.location.replace(resp.apply_code_url)
                 }
             }
-        })
+        });
+    }
+
+    github_login(){
+        $.ajax({
+            url: "https://app3152.acapp.acwing.com.cn/settings/github/apply_code/",
+            type: "GET",
+            success: function(resp){
+                if(resp.result === "success") {
+                    window.location.replace(resp.apply_code_url)
+                }
+            }
+        });
     }
 
     add_listening_events_login() {
@@ -179,8 +206,33 @@ class Settings {
             }
         })
     }
+
+    acapp_login() {
+        let outer = this;
+        $.ajax({
+            //获取参数
+            url: "https://app3152.acapp.acwing.com.cn/settings/acwing/acapp/apply_code/",
+            type: "GET",
+            success: function(resp) {
+                console.log(resp);
+                if(resp.result === "success") {
+                    outer.root.AcWingOS.api.oauth2.authorize(resp.appid, resp.redirect_uri, resp.scope, resp.state, function(resp){
+                        console.log(resp);
+                        if(resp.result === "success") {
+                            outer.username = resp.username;
+                            outer.photo = resp.photo;
+                            outer.hide();
+                            outer.root.menu.show();
+                        }
+                    });
+                }
+
+            }
+        });
+    }
+
     register(){
-         // 打开注册页面
+        // 打开注册页面
         this.$login.hide();
         this.$register.show();
     }
@@ -189,7 +241,7 @@ class Settings {
         this.$register.hide();
         this.$login.show();
     }
-    
+
     login_remote(){
         let outer = this;
         let username = this.$login_username.val();
