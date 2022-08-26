@@ -37,10 +37,11 @@ class AcGameMenu{
         let outer = this;
         this.$singlemode.click(function(){
             outer.hide();
-            outer.root.playground.show();
+            outer.root.playground.show("singleplayer");
         }); 
         this.$multimode.click(function(){
-            console.log("多人模式");
+            outer.hide();
+            outer.root.playground.show("multiplayer");
         });
         this.$settings.click(function(){
             console.log("设置");
