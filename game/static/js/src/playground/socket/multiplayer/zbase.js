@@ -8,7 +8,6 @@ class MultiPlayerSocket{
     }
     
     send_create_player(uuid, username, photo){
-        console.log('send create player ', uuid, username);
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "create_player",
@@ -49,8 +48,37 @@ class MultiPlayerSocket{
             if(uuid === outer.uuid) return false; //忽略自己发出的信息
             if(event === "create_player") {
                 outer.receive_create_player(uuid, data.username, data.photo);
+            }else if(event === "move_to") {
+                outer.receive_move_to(uuid, data.tx, data.ty);
             }
         }
     }
+
+    get_player_by_uuid(uuid) {
+        let players = this.playground.players;
+        for(let i = 0; i < players.length; i++) {
+            if(players[i].uuid === uuid)
+                return players[i];
+        }
+        return null;
+    }
+
+    send_move_to(tx, ty) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event' : "move_to",
+            'uuid' : outer.uuid,
+            'tx': tx,
+            'ty': ty,
+        }));
+    }
+
+    receive_move_to(uuid, tx, ty) {
+        let player = this.get_player_by_uuid(uuid);
+        if(player) {
+            player.move_to(tx, ty);
+        }
+    }
+
 
 }

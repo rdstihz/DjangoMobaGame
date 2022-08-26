@@ -331,6 +331,9 @@ class Player extends AcGameObject{
         return Math.sqrt(dx * dx + dy * dy);
     }
     move_to(tx, ty){
+        if (this.playground.mode === "multiplayer" && this.character === "me") {
+            this.playground.mps.send_move_to(tx, ty);
+        }
         this.move_length = this.get_dist(this.x, this.y, tx, ty);
         this.angle = Math.atan2(ty - this.y, tx - this.x);
         this.vx = Math.cos(this.angle);
@@ -476,7 +479,6 @@ class MultiPlayerSocket{
     }
     
     send_create_player(uuid, username, photo){
-        console.log('send create player ', uuid, username);
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "create_player",
@@ -517,9 +519,38 @@ class MultiPlayerSocket{
             if(uuid === outer.uuid) return false; //忽略自己发出的信息
             if(event === "create_player") {
                 outer.receive_create_player(uuid, data.username, data.photo);
+            }else if(event === "move_to") {
+                outer.receive_move_to(uuid, data.tx, data.ty);
             }
         }
     }
+
+    get_player_by_uuid(uuid) {
+        let players = this.playground.players;
+        for(let i = 0; i < players.length; i++) {
+            if(players[i].uuid === uuid)
+                return players[i];
+        }
+        return null;
+    }
+
+    send_move_to(tx, ty) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event' : "move_to",
+            'uuid' : outer.uuid,
+            'tx': tx,
+            'ty': ty,
+        }));
+    }
+
+    receive_move_to(uuid, tx, ty) {
+        let player = this.get_player_by_uuid(uuid);
+        if(player) {
+            player.move_to(tx, ty);
+        }
+    }
+
 
 }
 class AcGamePlayground{
@@ -561,6 +592,7 @@ class AcGamePlayground{
         this.game_map = new GameMap(this);
         this.colors = ["blue", "green", "grey", "pink", "yellow"];
         this.players = [];
+        this.mode = mode;
         this.players.push(new Player(this, this.width / 2 / this.scale, 0.5,0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo));
 
         if(mode === "singleplayer") { //单人模式

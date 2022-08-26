@@ -37,6 +37,7 @@ class AcGamePlayground{
         this.game_map = new GameMap(this);
         this.colors = ["blue", "green", "grey", "pink", "yellow"];
         this.players = [];
+        this.mode = mode;
         this.players.push(new Player(this, this.width / 2 / this.scale, 0.5,0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo));
 
         if(mode === "singleplayer") { //单人模式

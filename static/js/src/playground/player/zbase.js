@@ -133,6 +133,9 @@ class Player extends AcGameObject{
         return Math.sqrt(dx * dx + dy * dy);
     }
     move_to(tx, ty){
+        if (this.playground.mode === "multiplayer" && this.character === "me") {
+            this.playground.mps.send_move_to(tx, ty);
+        }
         this.move_length = this.get_dist(this.x, this.y, tx, ty);
         this.angle = Math.atan2(ty - this.y, tx - this.x);
         this.vx = Math.cos(this.angle);
