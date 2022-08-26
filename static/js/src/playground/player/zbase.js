@@ -20,7 +20,7 @@ class Player extends AcGameObject{
         this.damage_speed = 0;
         this.friction = 0.9;
 
-        this.eps = 0.1;
+        this.eps = 0.001;
 
         this.cur_skill = null; //当前选择的技能
         
@@ -43,7 +43,7 @@ class Player extends AcGameObject{
         }
     }
     update(){
-        if(this.damage_speed > 10) {
+        if(this.damage_speed > 0.1) {
             this.vx = this.vy = 0;
             this.move_length = 0;
             this.x += this.damage_x * this.damage_speed * this.timedelta / 1000;
@@ -54,8 +54,8 @@ class Player extends AcGameObject{
                 this.move_length = 0;
                 //AI玩家，随机移动, 随机发射火球
                 if(!this.is_me) {
-                    let x = Math.random() * this.playground.width;
-                    let y = Math.random() * this.playground.height;
+                    let x = Math.random() * this.playground.width / this.playground.scale;
+                    let y = Math.random();
                     this.move_to(x, y);
                 }
             }else {
@@ -76,7 +76,10 @@ class Player extends AcGameObject{
 
         this.render();
     }
-
+    
+    update_movd(){
+        
+    }
 
     add_listening_events(){
         let outer = this;
@@ -86,8 +89,8 @@ class Player extends AcGameObject{
 
         this.playground.game_map.$canvas.mousedown(function(e){
             const rect = outer.ctx.canvas.getBoundingClientRect();
-            let rx = outer.clientX - rect.left;
-            let ry = outer.clientY - rect.top;
+            let rx = (outer.clientX - rect.left) / outer.playground.scale;
+            let ry = (outer.clientY - rect.top) / outer.playground.scale;
             if(e.which === 3) {
                 outer.move_to(rx, ry);
             }
@@ -107,8 +110,8 @@ class Player extends AcGameObject{
         //键盘按下按键，选择技能
         $(window).keyup(function(e){
             const rect = outer.ctx.canvas.getBoundingClientRect();
-            let rx = outer.clientX - rect.left;
-            let ry = outer.clientY - rect.top;
+            let rx = (outer.clientX - rect.left) / outer.playground.scale;
+            let ry = (outer.clientY - rect.top) / outer.playground.scale;
             if(e.which == 81) { //按下Q键选择火球技能
                 //outer.cur_skill = "fireball";
                 outer.shoot_fireball(rx, ry);
@@ -141,22 +144,22 @@ class Player extends AcGameObject{
         let angle = Math.atan2(ty - this.y, tx - this.x);
         let vx = Math.cos(angle);
         let vy = Math.sin(angle);
-        let fireball = new FireBall(this.playground, this, this.x, this.y, this.playground.height * 0.01, vx, vy ,"red", this.playground.height * 0.5, this.playground.height * 0.5, this.playground.height * 0.01);
+        let fireball = new FireBall(this.playground, this, this.x, this.y, 0.01, vx, vy ,"red", 0.5, 0.5, 0.01);
     }
 
     render(){
+        let scale = this.playground.scale;
         if(this.is_me) {
             this.ctx.save();
             this.ctx.beginPath();
-            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
             this.ctx.stroke();
             this.ctx.clip();
-            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, 
-                               this.radius * 2, this.radius * 2);
+            this.ctx.drawImage(this.img, (this.x - this.radius) * scale, (this.y - this.radius) * scale,this.radius * 2 * scale, this.radius * 2 * scale);
             this.ctx.restore();
         }else {
             this.ctx.beginPath();
-            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
             this.ctx.fillStyle = this.color;
             this.ctx.fill();
         }
@@ -178,7 +181,7 @@ class Player extends AcGameObject{
         }
 
         this.radius -= damage;
-        if(this.radius < this.eps / 10 * this.playground.height) {
+        if(this.radius < this.eps) {
             this.destory();
         }
 
