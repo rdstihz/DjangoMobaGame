@@ -13,12 +13,21 @@ class FireBall extends AcGameObject{
         this.speed = speed;
         this.move_length = move_length;
         this.damage = damage;
+        
 
         this.eps = 0.001;
     }
 
     start(){}
     update(){
+        if(this.player.character != "enemy") {
+            this.update_attack();
+        }
+        this.update_move();
+        this.render();
+    }
+    
+    update_attack() {
         //判断是否击中其它玩家
         for(let i = 0; i < this.playground.players.length; i++){
             let player = this.playground.players[i];
@@ -28,7 +37,10 @@ class FireBall extends AcGameObject{
             }
 
         }
+       
+    }
 
+    update_move() {
         if(this.move_length < this.eps) {
             this.move_length = 0;
             this.destory();
@@ -38,9 +50,8 @@ class FireBall extends AcGameObject{
             this.y += this.vy * moved;
             this.move_length -= moved;
         }
-
-        this.render();
     }
+
     render(){
         let scale = this.playground.scale;
         this.ctx.beginPath();
@@ -58,8 +69,24 @@ class FireBall extends AcGameObject{
     }
     attack(player) {
         let angle = Math.atan2(player.y - this.y, player.x - this.x);
+        
+
+        this.playground.mps.send_attack(player.uuid, player.x, player.y,
+            angle, this.damage ,this.uuid);
+
         player.be_attacked(angle, this.damage);
         this.destory();
     }
+
+    on_destory(){
+        let fireballs = this.playground.players[0].fireballs;
+        for(let i = 0; i < fireballs.length; i++) {
+            if(fireballs[i] === this) {
+                fireballs.splice(i, 1);
+                break;
+            }
+        }
+    }
+
 }
 

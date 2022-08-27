@@ -19,6 +19,8 @@ class Player extends AcGameObject{
         this.damage_length = 0;
         this.damage_speed = 0;
         this.friction = 0.9;
+        
+        this.fireballs = []; //储存玩家释放的火球
 
         this.eps = 0.001;
 
@@ -115,7 +117,9 @@ class Player extends AcGameObject{
             if(e.which == 81) { //按下Q键选择火球技能
                 //outer.cur_skill = "fireball";
                 outer.shoot_fireball(rx, ry);
-                return false;
+
+                if(outer.playground.mode === "multiplayer")
+                    outer.playground.mps.send_shoot_fireball(rx, ry);
             }
         });
 
@@ -148,6 +152,8 @@ class Player extends AcGameObject{
         let vx = Math.cos(angle);
         let vy = Math.sin(angle);
         let fireball = new FireBall(this.playground, this, this.x, this.y, 0.01, vx, vy ,"red", 0.5, 0.5, 0.01);
+        this.fireballs.push(fireball);
+        return fireball;
     }
 
     render(){
@@ -203,6 +209,18 @@ class Player extends AcGameObject{
             }
         }
     }
-
-
+    
+    destory_fireball_ba_uuid(uuid) {
+        for(let i = 0; i < this.fireballs.length; i++) {
+            if(uuid === this.fireballs[i].uuid) {
+                this.fireballs[i].destory();
+            }
+        }
+    }
+    
+    receive_attack(x, y, angle, damage) {
+        this.x = x;
+        this.y = y;
+        this.be_attacked(angle, damage);
+    }
 }
