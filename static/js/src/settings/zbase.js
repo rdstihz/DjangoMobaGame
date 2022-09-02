@@ -34,14 +34,14 @@ class Settings {
                         注册
                     </div>
                     <div class="ac-game-settings-third-login ac-game-settings-third-login-acwing">
-                        <img width="30" src="https://app3152.acapp.acwing.com.cn/static/images/settings/acwing_logo.png">
+                        <img width="30" src="https://rdstihz.top:444/static/images/settings/acwing_logo.png">
                         <br>
                         <div>
                             AcWing一键登录
                         </div>
                     </div>
                     <div class="ac-game-settings-third-login ac-game-settings-third-login-github">
-                        <img width="30" src="https://app3152.acapp.acwing.com.cn/static/images/settings/github_logo3.png">
+                        <img width="30" src="https://rdstihz.top:444/static/images/settings/github_logo3.png">
                         <br>
                         <div>
                             Github一键登录
@@ -136,7 +136,7 @@ class Settings {
 
     acwing_login(){
         $.ajax({
-            url: "https://app3152.acapp.acwing.com.cn/settings/acwing/web/apply_code/",
+            url: "https://rdstihz.top:444/settings/acwing/web/apply_code/",
             type: "GET",
             success: function(resp){
                 if(resp.result === "success") {
@@ -148,7 +148,7 @@ class Settings {
 
     github_login(){
         $.ajax({
-            url: "https://app3152.acapp.acwing.com.cn/settings/github/apply_code/",
+            url: "https://rdstihz.top:444/settings/github/apply_code/",
             type: "GET",
             success: function(resp){
                 if(resp.result === "success") {
@@ -187,7 +187,7 @@ class Settings {
     getinfo(){
         let outer = this;
         $.ajax({
-            url: "https://app3152.acapp.acwing.com.cn/settings/getinfo/",
+            url: "https://rdstihz.top:444/settings/getinfo/",
             type: "GET",
             data: {
                 platform: outer.platform,
@@ -211,7 +211,7 @@ class Settings {
         let outer = this;
         $.ajax({
             //获取参数
-            url: "https://app3152.acapp.acwing.com.cn/settings/acwing/acapp/apply_code/",
+            url: "https://rdstihz.top:444/settings/acwing/acapp/apply_code/",
             type: "GET",
             success: function(resp) {
                 console.log(resp);
@@ -249,7 +249,7 @@ class Settings {
         this.$login_error_messages.empty();
         console.log(username, password);
         $.ajax({
-            url: "https://app3152.acapp.acwing.com.cn/settings/login/",
+            url: "https://rdstihz.top:444/settings/login/",
             type: "GET",
             data: {
                 username: username,
@@ -273,7 +273,7 @@ class Settings {
         let password_confirm = this.$register_password_confirm.val();
         this.$register_error_messages.empty();
         $.ajax({
-            url: "https://app3152.acapp.acwing.com.cn/settings/register/",
+            url: "https://rdstihz.top:444/settings/register/",
             type: "GET",
             data: {
                 username: username,
@@ -298,7 +298,7 @@ class Settings {
         }
         let outer = this;
         $.ajax({
-            url: "https://app3152.acapp.acwing.com.cn/settings/logout/",
+            url: "https://rdstihz.top:444/settings/logout/",
             type: "GET",
             success: function(resp){
                 if (resp.result === "success") {

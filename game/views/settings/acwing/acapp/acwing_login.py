@@ -15,8 +15,8 @@ def get_state():
 
 def apply_code(request):
     
-    appid = "3152"
-    redirect_uri = quote("https://app3152.acapp.acwing.com.cn/settings/acwing/acapp/receive_code/")
+    appid = "3279"
+    redirect_uri = quote("https://rdstihz.top:444/settings/acwing/acapp/receive_code/")
     scope = "userinfo"
     state = get_state() # 随机识别字符串
 
@@ -56,8 +56,8 @@ def receive_code(request):
     #获取access token
     apply_access_token_url = "https://www.acwing.com/third_party/api/oauth2/access_token/"
     params = {
-        'appid': "3152",
-        'secret': "d368758897b74cfdb7e4a30239fcf954",
+        'appid': "3279",
+        'secret': "e20b1478784542e791eaf9be3aaf02f1",
         'code': code
     }
     resp = requests.get(apply_access_token_url, params).json()

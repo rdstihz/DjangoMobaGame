@@ -38,6 +38,12 @@ class AcGamePlayground{
         this.colors = ["blue", "green", "grey", "pink", "yellow"];
         this.players = [];
         this.mode = mode;
+        this.state = "waiting"; // waiting -> fighting -> over
+        this.playercount = 0;
+
+        //创建状态栏
+        this.noticeboard = new NoticeBoard(this);
+
         this.players.push(new Player(this, this.width / 2 / this.scale, 0.5,0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo));
 
         if(mode === "singleplayer") { //单人模式

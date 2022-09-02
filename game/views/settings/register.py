@@ -28,7 +28,7 @@ def register(request):
 
     user.save()
 
-    Player.objects.create(user=user, photo="https://app3152.acapp.acwing.com.cn/static/images/settings/acwing_logo.png")
+    Player.objects.create(user=user, photo="https://rdstihz.top:444/static/images/settings/acwing_logo.png")
     login(request, user)
 
     return JsonResponse({

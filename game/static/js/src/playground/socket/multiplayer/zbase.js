@@ -2,7 +2,7 @@ class MultiPlayerSocket{
     constructor(playground) {
         this.playground = playground;
         this.uuid = playground.players[0].uuid;
-        this.ws = new WebSocket("wss://app3152.acapp.acwing.com.cn/wss/multiplayer/");
+        this.ws = new WebSocket("wss://rdstihz.top:444/wss/multiplayer/");
         
         this.start();
     }
@@ -55,6 +55,8 @@ class MultiPlayerSocket{
             }else if(event === "attack") {
                 outer.receive_attack(uuid, data.attackee_uuid, data.x, data.y, data.angle, 
                     data.damage, data.ball_uuid);
+            }else if(event === "blink_to") {
+                outer.receive_blink_to(uuid, data.tx, data.ty);
             }
         }
     }
@@ -122,6 +124,23 @@ class MultiPlayerSocket{
         if(attacker && attackee) {
             attackee.receive_attack(x, y, angle, damage, ball_uuid);
             attacker.destory_fireball_by_uuid(ball_uuid);
+        }
+    }
+
+    send_blink_to(tx, ty) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event': "blink_to",
+            'uuid': outer.uuid,
+            'tx': tx,
+            'ty': ty,
+        }));
+    }
+
+    receive_blink_to(uuid, tx, ty) {
+        let player = this.get_player_by_uuid(uuid);
+        if(player) {
+            player.blink_to(tx, ty);
         }
     }
 }

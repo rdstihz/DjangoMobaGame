@@ -17,7 +17,7 @@ def get_state():
 
 def apply_code(request):
     client_id = "59f2bfd0d795ef4cff19"
-    redirect_uri = quote("https://app3152.acapp.acwing.com.cn/settings/github/receive_code/")
+    redirect_uri = quote("https://rdstihz.top:444/settings/github/receive_code/")
     scope = "user"
     state = get_state()
     cache.set(state, True, 600)

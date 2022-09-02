@@ -70,8 +70,8 @@ class FireBall extends AcGameObject{
     attack(player) {
         let angle = Math.atan2(player.y - this.y, player.x - this.x);
         
-
-        this.playground.mps.send_attack(player.uuid, player.x, player.y,
+        if(this.playground.mode === "multiplayer")
+            this.playground.mps.send_attack(player.uuid, player.x, player.y,
             angle, this.damage ,this.uuid);
 
         player.be_attacked(angle, this.damage);
