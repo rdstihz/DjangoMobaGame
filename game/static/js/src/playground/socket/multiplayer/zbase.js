@@ -57,6 +57,8 @@ class MultiPlayerSocket{
                     data.damage, data.ball_uuid);
             }else if(event === "blink_to") {
                 outer.receive_blink_to(uuid, data.tx, data.ty);
+            }else if(event === "message") {
+                outer.receive_message(data.username, data.text);
             }
         }
     }
@@ -143,4 +145,19 @@ class MultiPlayerSocket{
             player.blink_to(tx, ty);
         }
     }
+
+    send_message(username, text) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event': "message",
+            'uuid': outer.uuid,
+            'username': username,
+            'text': text,
+        }));
+    }
+
+    receive_message(username, text){
+        this.playground.chatfield.add_message(username, text);
+    }
+
 }

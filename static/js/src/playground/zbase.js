@@ -41,8 +41,12 @@ class AcGamePlayground{
         this.state = "waiting"; // waiting -> fighting -> over
         this.playercount = 0;
 
+
         //创建状态栏
         this.noticeboard = new NoticeBoard(this);
+
+        //创建聊天区域
+        this.chatfield = new ChatField(this);
 
         this.players.push(new Player(this, this.width / 2 / this.scale, 0.5,0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo));
 

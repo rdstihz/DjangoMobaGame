@@ -3,7 +3,7 @@ class GameMap extends AcGameObject {
         super();
         this.playground = playground;
 
-        this.$canvas = $(`<canvas></canvas>`);
+        this.$canvas = $(`<canvas tabindex=0></canvas>`);
         this.ctx = this.$canvas[0].getContext('2d'); //2D画布
 
         this.ctx.canvas.width = playground.width;
@@ -14,6 +14,7 @@ class GameMap extends AcGameObject {
         this.timestamp = 0;//时间戳
     }
     start() {
+        this.$canvas.focus();
     }
     update(){
         this.timestamp += this.timedelta / 1000;

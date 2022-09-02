@@ -116,12 +116,88 @@ let AC_GAME_ANIMATION = function(timestamp){
 }
 
 requestAnimationFrame(AC_GAME_ANIMATION); //在下一帧开始时调用 
+class ChatField {
+    constructor(playground) {
+        this.playground = playground;
+        this.$history = $(`<div class="ac-game-chat-field-history"></div>`);
+        this.$input = $(`<input type="text" class="ac-game-chat-field-input">`);
+        
+        this.$history.hide();
+        this.$input.hide();
+
+        this.playground.$playground.append(this.$history);
+        this.playground.$playground.append(this.$input);
+
+        this.func_id = null;
+        
+        this.start();
+    }
+
+    start(){
+        this.add_listening_event();
+    }
+
+    add_listening_event() {
+        let outer = this;
+        this.$input.keydown( function(e){
+            if(e.which === 27) {
+                outer.hide_input();
+                return false;
+            }else if(e.which === 13) {//enter, 发送消息
+                let username = outer.playground.root.settings.username;
+                let text = outer.$input.val();
+                
+                if(text) {
+                    outer.$input.val("");
+                    outer.add_message(username, text);
+                    outer.playground.mps.send_message(username, text);
+                }
+
+            }
+        });
+    }
+    
+    render_message(message) {
+        return $(`<div>${message}</div>`)
+    }
+
+    add_message(username, text) {
+        this.show_history();
+        let message = `[${username}]${text}`
+        this.$history.append(this.render_message(message));
+        this.$history.scrollTop(this.$history[0].scrollHeight);
+    }
+
+    show_history() {
+        let outer = this;
+        this.$history.fadeIn();
+        
+        if(this.func_id) clearTimeout(this.func_id);
+
+        this.func_id = setTimeout(function(){
+            outer.$history.fadeOut();
+            outer.func_id = null;
+        }, 3000);
+
+    }
+
+    show_input() {
+        this.show_history();
+
+        this.$input.show();
+        this.$input.focus();
+    }
+    hide_input() {
+        this.$input.hide();
+        this.playground.game_map.$canvas.focus();
+    }
+}
 class GameMap extends AcGameObject {
     constructor(playground) {
         super();
         this.playground = playground;
 
-        this.$canvas = $(`<canvas></canvas>`);
+        this.$canvas = $(`<canvas tabindex=0></canvas>`);
         this.ctx = this.$canvas[0].getContext('2d'); //2D画布
 
         this.ctx.canvas.width = playground.width;
@@ -132,6 +208,7 @@ class GameMap extends AcGameObject {
         this.timestamp = 0;//时间戳
     }
     start() {
+        this.$canvas.focus();
     }
     update(){
         this.timestamp += this.timedelta / 1000;
@@ -371,7 +448,6 @@ class Player extends AcGameObject{
                 const rect = outer.ctx.canvas.getBoundingClientRect();
                 let rx = (outer.clientX - rect.left) / outer.playground.scale;
                 let ry = (outer.clientY - rect.top) / outer.playground.scale;
-                
                 //右键点击移动
                 if(e.which === 3) {
                     outer.move_to(rx, ry);
@@ -379,16 +455,10 @@ class Player extends AcGameObject{
             }
         });
 
-        //按下S键，取消移动
-        $(window).keydown(function(e){
-            if(e.which == 83) { //S
-                outer.move_length = 0;
-            }
-        });
 
         
-        //键盘按下按键，选择技能
-        $(window).keyup(function(e){
+        //抬起按键，释放技能
+        this.playground.game_map.$canvas.keyup(function(e){
             if(outer.playground.state === "fighting") {
                 const rect = outer.ctx.canvas.getBoundingClientRect();
                 let rx = (outer.clientX - rect.left) / outer.playground.scale;
@@ -415,6 +485,27 @@ class Player extends AcGameObject{
 
             }
         });
+
+
+        this.playground.game_map.$canvas.keydown(function(e){
+            console.log(e.which);
+            if(outer.playground.mode === "multiplayer") {
+                if(e.which === 13) { // enter
+                    //按下输入键，显示输入框
+                    outer.playground.chatfield.show_input();
+                    return false;
+                }else if(e.which === 27) {
+                    //按下ESC, 关闭输入框
+                    outer.playground.chatfield.hide_input();
+                }
+            }
+
+           //按下S键，取消移动
+            if(e.which == 83) { //S
+                outer.move_length = 0;
+            }
+        });
+
 
         //鼠标移动，随时记录鼠标位置
         $(window).mousemove(function(e){
@@ -551,7 +642,6 @@ class Player extends AcGameObject{
             this.playground.noticeboard.write("over");
             this.playground.noticeboard.display("You Died!");
         }
-        
         if(this.playground.state === "fighting" && 
             this.character !== "me" && this.playground.players.length === 2) {
             this.playground.state = "over";
@@ -565,8 +655,6 @@ class Player extends AcGameObject{
                 break;
             }
         }
-        
-        
 
     }
     
@@ -735,6 +823,8 @@ class MultiPlayerSocket{
                     data.damage, data.ball_uuid);
             }else if(event === "blink_to") {
                 outer.receive_blink_to(uuid, data.tx, data.ty);
+            }else if(event === "message") {
+                outer.receive_message(data.username, data.text);
             }
         }
     }
@@ -821,6 +911,21 @@ class MultiPlayerSocket{
             player.blink_to(tx, ty);
         }
     }
+
+    send_message(username, text) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event': "message",
+            'uuid': outer.uuid,
+            'username': username,
+            'text': text,
+        }));
+    }
+
+    receive_message(username, text){
+        this.playground.chatfield.add_message(username, text);
+    }
+
 }
 class AcGamePlayground{
     constructor(root) {
@@ -865,8 +970,12 @@ class AcGamePlayground{
         this.state = "waiting"; // waiting -> fighting -> over
         this.playercount = 0;
 
+
         //创建状态栏
         this.noticeboard = new NoticeBoard(this);
+
+        //创建聊天区域
+        this.chatfield = new ChatField(this);
 
         this.players.push(new Player(this, this.width / 2 / this.scale, 0.5,0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo));
 

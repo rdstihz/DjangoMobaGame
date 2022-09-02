@@ -132,7 +132,6 @@ class Player extends AcGameObject{
                 const rect = outer.ctx.canvas.getBoundingClientRect();
                 let rx = (outer.clientX - rect.left) / outer.playground.scale;
                 let ry = (outer.clientY - rect.top) / outer.playground.scale;
-                
                 //右键点击移动
                 if(e.which === 3) {
                     outer.move_to(rx, ry);
@@ -140,16 +139,10 @@ class Player extends AcGameObject{
             }
         });
 
-        //按下S键，取消移动
-        $(window).keydown(function(e){
-            if(e.which == 83) { //S
-                outer.move_length = 0;
-            }
-        });
 
         
-        //键盘按下按键，选择技能
-        $(window).keyup(function(e){
+        //抬起按键，释放技能
+        this.playground.game_map.$canvas.keyup(function(e){
             if(outer.playground.state === "fighting") {
                 const rect = outer.ctx.canvas.getBoundingClientRect();
                 let rx = (outer.clientX - rect.left) / outer.playground.scale;
@@ -176,6 +169,27 @@ class Player extends AcGameObject{
 
             }
         });
+
+
+        this.playground.game_map.$canvas.keydown(function(e){
+            console.log(e.which);
+            if(outer.playground.mode === "multiplayer") {
+                if(e.which === 13) { // enter
+                    //按下输入键，显示输入框
+                    outer.playground.chatfield.show_input();
+                    return false;
+                }else if(e.which === 27) {
+                    //按下ESC, 关闭输入框
+                    outer.playground.chatfield.hide_input();
+                }
+            }
+
+           //按下S键，取消移动
+            if(e.which == 83) { //S
+                outer.move_length = 0;
+            }
+        });
+
 
         //鼠标移动，随时记录鼠标位置
         $(window).mousemove(function(e){
@@ -312,7 +326,6 @@ class Player extends AcGameObject{
             this.playground.noticeboard.write("over");
             this.playground.noticeboard.display("You Died!");
         }
-        
         if(this.playground.state === "fighting" && 
             this.character !== "me" && this.playground.players.length === 2) {
             this.playground.state = "over";
@@ -326,8 +339,6 @@ class Player extends AcGameObject{
                 break;
             }
         }
-        
-        
 
     }
     
