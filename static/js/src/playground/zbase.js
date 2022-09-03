@@ -15,9 +15,17 @@ class AcGamePlayground{
 
     start(){
         let outer = this;
-        $(window).resize(function(e){
+        //$(window).resize(function(e){
+        let uuid = this.create_uuid();
+        $(window).on(`resize.${uuid}`, function(){
             outer.resize();
         });
+
+        if(this.root.AcWingOS) {
+            this.root.AcWingOS.api.window.on_close(function(){
+                $(window).off(`resize.${uuid}`);
+            });
+        }
     }
     
     resize(){ //调整大小时，固定长宽比为16:9
@@ -26,6 +34,15 @@ class AcGamePlayground{
         this.height = unit * 9;
         this.scale = this.height;
         if(this.game_map) this.game_map.resize();
+    }
+   
+    create_uuid() {
+        let res = "";
+        for (let i = 0; i < 8; i++) {
+            let x = Math.floor(Math.random() * 10);
+            res += parseInt(x);
+        }
+        return res;
     }
 
 
@@ -44,6 +61,9 @@ class AcGamePlayground{
 
         //创建状态栏
         this.noticeboard = new NoticeBoard(this);
+        
+        //结束界面
+        this.scoreboard = new ScoreBoard(this);
 
         //创建聊天区域
         this.chatfield = new ChatField(this);
@@ -57,7 +77,6 @@ class AcGamePlayground{
         }else if(mode === "multiplayer") { //多人模式
             this.mps = new MultiPlayerSocket(this);
             this.mps.ws.onopen = function() {
-                console.log('onopen');
                 outer.mps.send_create_player(
                     outer.players[0].uuid,
                     outer.players[0].username, 
@@ -68,6 +87,26 @@ class AcGamePlayground{
     }
 
     hide() {
+        
+        while(this.players && this.players.length > 0) {
+            this.players[0].destory();
+        }
+
+        if(this.game_map) {
+            this.game_map.destory();
+            this.game_map = null;
+        }
+
+        if(this.noticeboard) {
+            this.noticeboard.destory();
+            this.noticeboard = null;
+        }
+        
+        if(this.scoreboard) {
+            this.scoreboard.destory();
+            this.scoreboard = null;
+        }
+        this.$playground.empty();
         this.$playground.hide();
     }
 

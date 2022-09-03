@@ -44,7 +44,6 @@ class AcGameMenu{
             outer.root.playground.show("multiplayer");
         });
         this.$settings.click(function(){
-            console.log("设置");
             
             outer.root.settings.logout_remote();
 

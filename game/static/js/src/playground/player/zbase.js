@@ -150,10 +150,10 @@ class Player extends AcGameObject{
                 if(e.which === 81) { //按下Q键选择火球技能
                     if(outer.fireball_coldtime > outer.eps) //技能在CD，
                         return false;
-                    outer.shoot_fireball(rx, ry);
+                    let fireball = outer.shoot_fireball(rx, ry);
                     outer.fireball_coldtime = 3;
                     if(outer.playground.mode === "multiplayer")
-                        outer.playground.mps.send_shoot_fireball(rx, ry);
+                        outer.playground.mps.send_shoot_fireball(rx, ry, fireball.uuid);
                 }
                 else if(e.which === 68) { //按下D键闪现
                     if(outer.blink_coldtime > outer.eps) 
@@ -172,7 +172,6 @@ class Player extends AcGameObject{
 
 
         this.playground.game_map.$canvas.keydown(function(e){
-            console.log(e.which);
             if(outer.playground.mode === "multiplayer") {
                 if(e.which === 13) { // enter
                     //按下输入键，显示输入框
@@ -321,16 +320,16 @@ class Player extends AcGameObject{
     }
 
     on_destory() {
-        if(this.character === "me") {
+        if(this.character === "me" && this.playground.state === "fighting") {
             this.playground.state = "over";
             this.playground.noticeboard.write("over");
-            this.playground.noticeboard.display("You Died!");
+            this.playground.scoreboard.lose();
         }
         if(this.playground.state === "fighting" && 
             this.character !== "me" && this.playground.players.length === 2) {
             this.playground.state = "over";
             this.playground.noticeboard.write("over");
-            this.playground.noticeboard.display("Winer Winer, Chicken Dinner!");
+            this.playground.scoreboard.win();
         }
 
         for(let i = 0; i < this.playground.players.length; i++){
@@ -342,7 +341,7 @@ class Player extends AcGameObject{
 
     }
     
-    destory_fireball_ba_uuid(uuid) {
+    destory_fireball_by_uuid(uuid) {
         for(let i = 0; i < this.fireballs.length; i++) {
             if(uuid === this.fireballs[i].uuid) {
                 this.fireballs[i].destory();

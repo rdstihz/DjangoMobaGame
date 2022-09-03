@@ -92,11 +92,46 @@ class MultiPlayer(AsyncWebsocketConsumer):
                 'event': "shoot_fireball",
                 'uuid': data['uuid'],
                 'tx': data['tx'],
-                'ty': data['ty']
+                'ty': data['ty'],
+                'ball_uuid': data['ball_uuid'],
             }
         )
 
     async def attack(self, data):
+        if not self.room_name:
+            return
+
+        players = cache.get(self.room_name)
+
+        if not players:
+            return
+
+        for player in players:
+            if player['uuid'] == data['attackee_uuid']:
+                player['hp'] -= 20;
+
+        remain_cnt = 0
+
+        for player in players:
+            if player['hp'] > 0:
+                remain_cnt += 1
+
+        if remain_cnt > 1:
+            if self.room_name:
+                cache.set(self.room_name, players, 3600)
+        else:
+            def db_update_player_score(username, score):
+                player = Player.objects.get(user__username=username)
+                player.score += score
+                player.save()
+
+            for player in players:
+                if player['hp'] <= 0:
+                    await database_sync_to_async(db_update_player_score)(player['username'], -5)
+                else:
+                    await database_sync_to_async(db_update_player_score)(player['username'], 10)
+
+
         await self.channel_layer.group_send(
             self.room_name,
             {

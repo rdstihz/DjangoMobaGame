@@ -79,7 +79,7 @@ class FireBall extends AcGameObject{
     }
 
     on_destory(){
-        let fireballs = this.playground.players[0].fireballs;
+        let fireballs = this.player.fireballs;
         for(let i = 0; i < fireballs.length; i++) {
             if(fireballs[i] === this) {
                 fireballs.splice(i, 1);

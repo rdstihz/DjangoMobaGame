@@ -194,7 +194,6 @@ class Settings {
             },
 
             success: function(resp) {
-                console.log(resp);
                 if(resp.result === "success") {
                     outer.username = resp.username
                     outer.photo = resp.photo
@@ -214,10 +213,8 @@ class Settings {
             url: "https://rdstihz.top:444/settings/acwing/acapp/apply_code/",
             type: "GET",
             success: function(resp) {
-                console.log(resp);
                 if(resp.result === "success") {
                     outer.root.AcWingOS.api.oauth2.authorize(resp.appid, resp.redirect_uri, resp.scope, resp.state, function(resp){
-                        console.log(resp);
                         if(resp.result === "success") {
                             outer.username = resp.username;
                             outer.photo = resp.photo;
@@ -247,7 +244,6 @@ class Settings {
         let username = this.$login_username.val();
         let password = this.$login_password.val();
         this.$login_error_messages.empty();
-        console.log(username, password);
         $.ajax({
             url: "https://rdstihz.top:444/settings/login/",
             type: "GET",
