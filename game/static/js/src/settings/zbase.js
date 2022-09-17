@@ -111,7 +111,13 @@ class Settings {
 
     start(){
         if(this.platform === "WEB") {
-            this.getinfo();
+            if(this.root.access) { //已登陆
+                this.getinfo(); //获取用户信息
+                this.refresh_jwt_token();  //定时刷新token
+            } else { //未登录
+                this.login();
+            }
+
             this.add_listening_events();
         }else {
             //ACAPP端一键登录
@@ -189,8 +195,13 @@ class Settings {
         $.ajax({
             url: "https://rdstihz.top:444/settings/getinfo/",
             type: "GET",
+            
             data: {
                 platform: outer.platform,
+            },
+
+            headers: {
+                'Authorization': "Bearer " + this.root.access,
             },
 
             success: function(resp) {
@@ -207,19 +218,24 @@ class Settings {
     }
 
     acapp_login() {
-        let outer = this;
         $.ajax({
             //获取参数
             url: "https://rdstihz.top:444/settings/acwing/acapp/apply_code/",
             type: "GET",
-            success: function(resp) {
+            success: resp => {
                 if(resp.result === "success") {
-                    outer.root.AcWingOS.api.oauth2.authorize(resp.appid, resp.redirect_uri, resp.scope, resp.state, function(resp){
+                    this.root.AcWingOS.api.oauth2.authorize(resp.appid, resp.redirect_uri, resp.scope, resp.state, resp => {
                         if(resp.result === "success") {
-                            outer.username = resp.username;
-                            outer.photo = resp.photo;
-                            outer.hide();
-                            outer.root.menu.show();
+                            this.username = resp.username;
+                            this.photo = resp.photo;
+                            this.hide();
+                            this.root.menu.show();
+                            
+                            this.root.access = resp.access;
+                            this.root.refresh = resp.refresh;
+                            console.log(resp);
+                            console.log("ACAPPLOGIN", this.root.access, this.root.refresh);
+                            this.refresh_jwt_token();
                         }
                     });
                 }
@@ -239,48 +255,50 @@ class Settings {
         this.$login.show();
     }
 
-    login_remote(){
-        let outer = this;
-        let username = this.$login_username.val();
-        let password = this.$login_password.val();
+    login_remote(username, password){
+        username = username || this.$login_username.val();
+        password = password || this.$login_password.val();
         this.$login_error_messages.empty();
         $.ajax({
-            url: "https://rdstihz.top:444/settings/login/",
-            type: "GET",
+            url: "https://rdstihz.top:444/settings/api/token/",
+            type: "POST",
             data: {
                 username: username,
                 password: password,
             },
-            success: function(resp){
-                if(resp.result === "success") {
-                    location.reload();
-                }else {
-                    outer.$login_error_messages.html(resp.result);
-                }
+            success: resp => {
+                //登录成功
+                console.log(resp);
+                this.root.access = resp.access;
+                this.root.refresh = resp.refresh;
+                this.refresh_jwt_token();
+                this.getinfo();
+            },
+            error: () => {
+                this.$login_error_messages.html("用户名或密码错误");
             }
         });
 
     }
 
     register_remote(){
-        let outer = this;
         let username = this.$register_username.val();
         let password = this.$register_password.val();
         let password_confirm = this.$register_password_confirm.val();
         this.$register_error_messages.empty();
         $.ajax({
             url: "https://rdstihz.top:444/settings/register/",
-            type: "GET",
+            type: "POST",
             data: {
                 username: username,
                 password: password,
                 password_confirm: password_confirm,
             },
-            success: function(resp) {
+            success: resp => {
                 if(resp.result === "success") {
-                    location.reload();
+                    this.login_remote(username, password);
                 }else{
-                    outer.$register_error_messages.html(resp.result);
+                    this.$register_error_messages.html(resp.result);
                 }
             }
         });
@@ -309,6 +327,36 @@ class Settings {
     }
     show(){
         this.$settings.show();
+    }
+    
+    refresh_jwt_token() { // 刷新jwt token
+        setInterval(()=> {
+            $.ajax({
+                url: "https://rdstihz.top:444/settings/api/token/refresh/",
+                type: "POST",
+                data: {
+                    'refresh': this.root.refresh,
+                },
+                success: resp => {
+                   this.root.access = resp.access;
+                }
+            });
+            console.log(this.root.access);
+        }, 4.5 * 60 * 1000); //每4.5min刷新一次token
+
+        setTimeout(()=>{
+            $.ajax({
+                url: "https://rdstihz.top:444/settings/ranklist/",
+                type: "GET",
+                headers: {
+                    'Authorization': "Bearer " + this.root.access,
+                },
+                success: resp => {
+                    console.log(resp);
+                }
+            });
+        }, 5000);
+
     }
 
 }

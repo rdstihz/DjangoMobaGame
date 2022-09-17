@@ -2,7 +2,7 @@ class MultiPlayerSocket{
     constructor(playground) {
         this.playground = playground;
         this.uuid = playground.players[0].uuid;
-        this.ws = new WebSocket("wss://rdstihz.top:444/wss/multiplayer/");
+        this.ws = new WebSocket("wss://rdstihz.top:444/wss/multiplayer/?token=" + playground.root.access);
         
         this.start();
     }

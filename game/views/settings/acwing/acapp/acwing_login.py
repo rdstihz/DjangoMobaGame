@@ -7,6 +7,8 @@ import requests
 from django.contrib.auth.models import User
 from game.models.player.player import Player
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
 def get_state():
     res = ""
     for i in range(8):
@@ -69,10 +71,13 @@ def receive_code(request):
     players = Player.objects.filter(openid = openid)
     if players.exists():
         #login(request, players[0].user) acapp 不需要login
+        refresh = RefreshToken.for_user(players[0].user)
         return JsonResponse({
             'result': "success",
             'username': players[0].user.username,
-            'photo': players[0].photo
+            'photo': players[0].photo,
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
         })
     
 
@@ -96,9 +101,12 @@ def receive_code(request):
     
     #登录并返回首页
     #login(request, user)
+    refresh = RefreshToken.for_user(user);
     return JsonResponse({
         'result': "success",
         'username': username,
-        'photo': photo
+        'photo': photo,
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
     })
 

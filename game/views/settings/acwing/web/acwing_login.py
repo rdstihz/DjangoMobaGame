@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, reverse
 from urllib.parse import quote
 from django.core.cache import cache
 from random import randint
@@ -8,6 +8,8 @@ import requests
 from django.contrib.auth.models import User
 from game.models.player.player import Player
 from django.contrib.auth import login
+
+from rest_framework_simplejwt.tokens import RefreshToken
 
 def get_state():
     res = ""
@@ -58,8 +60,9 @@ def receive_code(request):
     #如果用户已经注册过，则无需再次注册
     players = Player.objects.filter(openid = openid)
     if players.exists():
-        login(request, players[0].user)
-        return redirect('index')
+        #login(request, players[0].user)
+        refresh = RefreshToken.for_user(players[0].user)
+        return redirect(reverse('index') + "?access=%s&refresh=%s" % (str(refresh.access_token), str(refresh)))
     
 
     #获取用户名和头像信息
@@ -81,6 +84,5 @@ def receive_code(request):
     player = Player.objects.create(user=user, photo=photo, openid=openid)
     
     #登录并返回首页
-    login(request, user)
-    return redirect('index')
-
+    refersh = RefreshToken.for_user(user)
+    return redirect(reverse('index') + "?access=%s&refresh=%s" % (str(refresh.access_token), str(refresh)))
